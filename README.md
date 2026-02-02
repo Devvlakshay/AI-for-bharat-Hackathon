@@ -25,7 +25,7 @@
 
 ## Overview
 
-**FitView AI** is an AI-powered virtual try-on platform for the Indian retail clothing market. Users create a personalized avatar matching their body type and virtually try on clothes before purchasing — reducing return rates, improving customer confidence, and giving retailers actionable intelligence on demand and sizing trends.
+**FitView AI** is an AI-powered virtual try-on platform for the Indian retail clothing market. Brands provide images of their models, and users select from 4-5 pre-built models to virtually try on clothes before purchasing — reducing return rates, improving customer confidence, and giving retailers actionable intelligence on demand and sizing trends.
 
 ---
 
@@ -48,11 +48,11 @@ Online fashion retail in India faces critical challenges:
 
 A full-stack web platform with three pillars:
 
-### 1. Personalized Avatar Creation
-Users upload a photo or enter body measurements. Our AI generates a realistic avatar matching their body shape, skin tone, and proportions.
+### 1. Model Selection
+Brands provide images of their own models. Users choose from 4-5 pre-built model images representing different body types — no avatar creation or photo upload needed.
 
 ### 2. Virtual Try-On Engine
-Users browse a clothing catalog and tap "Try On" to see garments realistically rendered on their avatar — powered by state-of-the-art diffusion-based try-on models hosted on serverless GPUs.
+Users browse a clothing catalog and tap "Try On" to see garments realistically rendered on their selected model — powered by state-of-the-art diffusion-based try-on models hosted on serverless GPUs.
 
 ### 3. Retail Intelligence Dashboard
 Retailers get insights on which products are tried on most, size distribution demand, conversion funnels, and AI-powered demand forecasting.
@@ -62,10 +62,10 @@ Retailers get insights on which products are tried on most, size distribution de
 ## Key Features
 
 ### For Customers
-- **Avatar Builder** — Create a personalized avatar from a photo or body measurements (height, weight, chest, waist, hip)
-- **Virtual Try-On** — See clothes on your avatar with realistic draping and fit
-- **AI Size Recommendation** — Get the right size suggested based on your measurements vs garment data
-- **Style Suggestions** — AI recommends outfits based on your preferences, body type, and trending styles
+- **Model Selection** — Choose from 4-5 brand-provided model images representing different body types
+- **Virtual Try-On** — See clothes on the selected model with realistic draping and fit
+- **AI Size Recommendation** — Get the right size suggested based on garment data
+- **Style Suggestions** — AI recommends outfits based on your preferences and trending styles
 - **Try-On History** — Review all past try-ons, save favorites, share with friends
 - **Wishlist & Cart** — Seamless e-commerce flow integrated with the try-on experience
 
@@ -84,10 +84,10 @@ Retailers get insights on which products are tried on most, size distribution de
 |                    CLIENT (Next.js)                   |
 |                                                       |
 |  +-------------+  +--------------+  +---------------+ |
-|  | Avatar      |  | Try-On       |  | Product       | |
-|  | Builder     |  | Viewer       |  | Catalog &     | |
-|  | (Photo/     |  | (Result      |  | Cart          | |
-|  |  Measure)   |  |  Display)    |  |               | |
+|  | Model       |  | Try-On       |  | Product       | |
+|  | Selector    |  | Viewer       |  | Catalog &     | |
+|  | (Brand      |  | (Result      |  | Cart          | |
+|  |  Models)    |  |  Display)    |  |               | |
 |  +------+------+  +------+-------+  +-------+-------+ |
 +---------|--------------|--------------------|----------+
           |              |                    |
@@ -100,18 +100,20 @@ Retailers get insights on which products are tried on most, size distribution de
 |  | User        |  | Service      |  | Forecasting   | |
 |  | Service     |  | (ML Bridge)  |  | Service       | |
 |  +------+------+  +------+-------+  +-------+-------+ |
+
 +---------|--------------|--------------------|----------+
           |              |                    |
           v              v                    v
 +----------------+ +------------------+ +----------------+
 |   MongoDB      | |  AI/ML Engine    | | Cloud Storage  |
 |                | |                  | |                |
-| - Users        | | - Body Parsing   | | - Product      |
-| - Products     | |   (MediaPipe)    | |   Images       |
-| - Try-On       | | - Avatar Gen     | | - Avatar       |
-|   Sessions     | | - Virtual Try-On | |   Assets       |
-| - Analytics    | |   (IDM-VTON)     | | - Try-On       |
-|                | | - Size Engine    | |   Results      |
+| - Users        | | - Virtual Try-On | | - Product      |
+| - Products     | |   (IDM-VTON)     | |   Images       |
+| - Models       | | - Size Engine    | | - Model        |
+|   (Brand)      | |                  | |   Images       |
+| - Try-On       | |                  | | - Try-On       |
+|   Sessions     | |                  | |   Results      |
+| - Analytics    | |                  | |                |
 |                | |                  | |                |
 | + Redis Cache  | | Hosted on        | | AWS S3 /       |
 |                | | Banana.dev /     | | Cloudinary     |
@@ -126,16 +128,14 @@ Retailers get insights on which products are tried on most, size distribution de
 | Layer | Technology | Why |
 |-------|-----------|-----|
 | **Frontend** | Next.js 14, React, TailwindCSS | SSR, fast routing, modern UI |
-| **3D/Avatar Rendering** | Three.js / React Three Fiber | Interactive 3D avatar display |
+| **UI Components** | React, TailwindCSS | Model selector, try-on viewer |
 | **Backend** | FastAPI (Python) | Async, fast, native ML ecosystem |
 | **Database** | MongoDB Atlas | Flexible schema for products & user data |
 | **Cache** | Redis | Fast session and try-on result caching |
-| **AI — Body Parsing** | MediaPipe / OpenPose | Extract pose and body segmentation from photos |
-| **AI — Avatar Generation** | Ready Player Me API / Custom pipeline | Generate avatar from measurements or photo |
 | **AI — Virtual Try-On** | IDM-VTON / OOTDiffusion | State-of-the-art diffusion-based garment try-on |
 | **AI — Hosting** | Banana.dev / Replicate | Serverless GPU inference (pay-per-call, no idle cost) |
 | **AI — Recommendations** | Sentence Transformers + Collaborative Filtering | Style and product suggestions |
-| **Storage** | AWS S3 / Cloudinary | Product images, avatars, try-on results |
+| **Storage** | AWS S3 / Cloudinary | Product images, model images, try-on results |
 | **Auth** | Firebase Auth or JWT | Secure user authentication |
 | **Deployment** | Vercel (frontend) + Railway/EC2 (backend) | Quick deploy, scalable |
 
@@ -143,57 +143,44 @@ Retailers get insights on which products are tried on most, size distribution de
 
 ## AI/ML Pipeline
 
-### Step 1: Body Understanding
+### Step 1: Model Selection
 ```
-User Photo ──> MediaPipe Pose Estimation ──> Keypoints + Segmentation
-                                                    |
-User Measurements (manual input) ───────────────────┤
-                                                    v
-                                            Body Profile
-                                       (height, proportions,
-                                        shape classification)
+Brand uploads 4-5 model images ──> Stored in cloud storage
+                                          |
+User selects a model ────────────────────>┘
+                                          v
+                                   Selected Model Image
 ```
 
-### Step 2: Avatar Generation
+### Step 2: Virtual Try-On
 ```
-Body Profile ──> Avatar Generation Engine ──> Personalized Avatar
-                  |
-                  ├── Option A: Ready Player Me API (3D avatar)
-                  └── Option B: Custom 2D avatar from body template matching
-```
-
-### Step 3: Virtual Try-On
-```
-Avatar Image ──────┐
-                    ├──> IDM-VTON / OOTDiffusion Model ──> Try-On Result Image
-Garment Image ─────┘         (hosted on Banana.dev)
+Selected Model Image ──┐
+                       ├──> IDM-VTON / OOTDiffusion Model ──> Try-On Result Image
+Garment Image ─────────┘         (hosted on Banana.dev)
   + Garment Mask
   + Pose Data
 ```
 
-### Step 4: Size Recommendation
+### Step 3: Size Recommendation
 ```
-User Measurements ──────┐
-                        ├──> Size Matching Algorithm ──> Recommended Size
-Garment Size Chart ─────┘                                + Fit Score (tight/perfect/loose)
+Garment Size Chart ──────┐
+                         ├──> Size Matching Algorithm ──> Recommended Size
+User Selected Size ──────┘                                + Fit Score (tight/perfect/loose)
 ```
 
-### Step 5: Style Recommendation
+### Step 4: Style Recommendation
 ```
 User Preferences ──────────┐
 Past Try-On History ────────┤
                             ├──> Recommendation Engine ──> Suggested Outfits
-Trending Products ──────────┤
-Body Type Compatibility ────┘
+Trending Products ──────────┘
 ```
 
 ### Model Details
 
 | Model | Purpose | Input | Output |
 |-------|---------|-------|--------|
-| **MediaPipe Pose** | Body keypoint detection | User photo | 33 pose landmarks |
-| **MediaPipe Segmentation** | Person segmentation | User photo | Body mask |
-| **IDM-VTON** | Virtual try-on | Avatar + garment image | Dressed avatar image |
+| **IDM-VTON** | Virtual try-on | Model image + garment image | Dressed model image |
 | **Sentence Transformers** | Style similarity | Product descriptions | Embedding vectors |
 
 ---
@@ -208,19 +195,7 @@ Body Type Compatibility ────┘
   "email": "string",
   "password_hash": "string",
   "phone": "string",
-  "body_measurements": {
-    "height_cm": "number",
-    "weight_kg": "number",
-    "chest_cm": "number",
-    "waist_cm": "number",
-    "hip_cm": "number",
-    "shoulder_cm": "number"
-  },
-  "avatar_url": "string",
-  "avatar_config": {
-    "skin_tone": "string",
-    "body_shape": "string"
-  },
+  "preferred_model_id": "ObjectId (ref: Models)",
   "preferences": {
     "styles": ["casual", "ethnic", "formal"],
     "favorite_brands": [],
@@ -228,6 +203,19 @@ Body Type Compatibility ────┘
   },
   "created_at": "datetime",
   "updated_at": "datetime"
+}
+```
+
+### Models Collection (Brand-Provided)
+```json
+{
+  "_id": "ObjectId",
+  "name": "string",
+  "brand": "string",
+  "body_type": "slim | average | athletic | plus-size",
+  "image_url": "url",
+  "pose_data": "url",
+  "created_at": "datetime"
 }
 ```
 
@@ -268,6 +256,7 @@ Body Type Compatibility ────┘
 {
   "_id": "ObjectId",
   "user_id": "ObjectId (ref: Users)",
+  "model_id": "ObjectId (ref: Models)",
   "product_id": "ObjectId (ref: Products)",
   "size_selected": "M",
   "size_recommended": "L",
@@ -309,12 +298,12 @@ Body Type Compatibility ────┘
 | POST | `/api/auth/login` | Login, returns JWT |
 | GET | `/api/auth/me` | Get current user profile |
 
-### Avatar
+### Models (Brand-Provided)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/avatar/create` | Create avatar from photo or measurements |
-| GET | `/api/avatar/{user_id}` | Get user's avatar |
-| PUT | `/api/avatar/{user_id}` | Update avatar measurements |
+| GET | `/api/models` | List all available brand models |
+| GET | `/api/models/{id}` | Get model details |
+| POST | `/api/models` | Upload a new model image (admin/brand) |
 
 ### Products
 | Method | Endpoint | Description |
@@ -327,7 +316,7 @@ Body Type Compatibility ────┘
 ### Virtual Try-On
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/tryon` | Run virtual try-on (avatar_id + product_id + size) |
+| POST | `/api/tryon` | Run virtual try-on (model_id + product_id + size) |
 | GET | `/api/tryon/history/{user_id}` | Get user's try-on history |
 | GET | `/api/tryon/{session_id}` | Get specific try-on result |
 
@@ -359,14 +348,14 @@ fitview-ai/
 │   │   │   ├── page.tsx        # Landing page
 │   │   │   ├── login/
 │   │   │   ├── register/
-│   │   │   ├── avatar/         # Avatar builder page
+│   │   │   ├── models/         # Model selection page
 │   │   │   ├── catalog/        # Product listing
 │   │   │   ├── product/[id]/   # Product detail + try-on
 │   │   │   ├── tryon/          # Try-on results
 │   │   │   ├── cart/
 │   │   │   └── dashboard/      # Retailer analytics
 │   │   ├── components/
-│   │   │   ├── AvatarBuilder.tsx
+│   │   │   ├── ModelSelector.tsx
 │   │   │   ├── TryOnViewer.tsx
 │   │   │   ├── ProductCard.tsx
 │   │   │   ├── SizeRecommender.tsx
@@ -387,24 +376,24 @@ fitview-ai/
 │   │   ├── config.py           # Environment config
 │   │   ├── models/
 │   │   │   ├── user.py         # User schema
+│   │   │   ├── brand_model.py  # Brand model schema
 │   │   │   ├── product.py      # Product schema
 │   │   │   ├── tryon.py        # Try-on session schema
 │   │   │   └── analytics.py    # Analytics schema
 │   │   ├── routes/
 │   │   │   ├── auth.py         # Auth endpoints
-│   │   │   ├── avatar.py       # Avatar endpoints
+│   │   │   ├── models.py       # Brand model endpoints
 │   │   │   ├── products.py     # Product endpoints
 │   │   │   ├── tryon.py        # Try-on endpoints
 │   │   │   ├── recommend.py    # Recommendation endpoints
 │   │   │   └── analytics.py    # Analytics endpoints
 │   │   ├── services/
-│   │   │   ├── avatar_service.py    # Avatar generation logic
+│   │   │   ├── model_service.py     # Brand model management
 │   │   │   ├── tryon_service.py     # ML model integration
 │   │   │   ├── size_engine.py       # Size recommendation
 │   │   │   ├── style_engine.py      # Style recommendations
 │   │   │   └── analytics_service.py # Analytics aggregation
 │   │   ├── ml/
-│   │   │   ├── body_parser.py       # MediaPipe integration
 │   │   │   ├── tryon_model.py       # Banana.dev/Replicate client
 │   │   │   └── embeddings.py        # Product embedding generation
 │   │   └── database/
@@ -441,14 +430,14 @@ fitview-ai/
 - [ ] Build product detail page
 - [ ] Set up cloud storage for images (S3/Cloudinary)
 
-### Phase 2: Avatar System
-**Goal:** Users can create and view their personalized avatar
+### Phase 2: Model Selection System
+**Goal:** Brands upload model images, users can browse and select a model
 
-- [ ] Build avatar creation form (manual measurements input)
-- [ ] Integrate MediaPipe for photo-based body measurement extraction
-- [ ] Build avatar generation pipeline (template matching or Ready Player Me)
-- [ ] Create avatar display component on frontend
-- [ ] Store avatar data and images in database and cloud storage
+- [ ] Build model upload flow for brands/admins
+- [ ] Store model images in cloud storage with metadata (body type, brand)
+- [ ] Build model selector component on frontend (grid of 4-5 models)
+- [ ] Allow users to pick and save a preferred model
+- [ ] Create model listing API endpoints
 
 ### Phase 3: Virtual Try-On Engine
 **Goal:** Core feature — users see clothes on their avatar
@@ -456,7 +445,7 @@ fitview-ai/
 - [ ] Set up Banana.dev / Replicate account for GPU inference
 - [ ] Integrate IDM-VTON or OOTDiffusion model
 - [ ] Pre-process garment images (generate masks, flat-lay normalization)
-- [ ] Build try-on API endpoint (accepts avatar + garment, returns result)
+- [ ] Build try-on API endpoint (accepts model image + garment, returns result)
 - [ ] Build try-on viewer component on frontend
 - [ ] Add loading states and result caching (Redis)
 - [ ] Store try-on session history
@@ -464,7 +453,7 @@ fitview-ai/
 ### Phase 4: Intelligence Layer
 **Goal:** Size recommendations, style suggestions, and retailer analytics
 
-- [ ] Build size recommendation engine (measurement comparison algorithm)
+- [ ] Build size recommendation engine
 - [ ] Integrate size suggestion into try-on flow
 - [ ] Build style recommendation engine (collaborative filtering + embeddings)
 - [ ] Create retailer analytics dashboard
@@ -544,10 +533,10 @@ The demo follows a user journey optimized for judges:
    Quick registration with basic details
                     |
                     v
-3. CREATE AVATAR
-   User enters measurements OR uploads a photo
-   --> AI generates personalized avatar
-   "Here's your FitView avatar!"
+3. SELECT A MODEL
+   User picks from 4-5 brand-provided model images
+   representing different body types
+   "Choose the model closest to your body type"
                     |
                     v
 4. BROWSE CATALOG
@@ -561,7 +550,7 @@ The demo follows a user journey optimized for judges:
                     |
                     v
 6. VIRTUAL TRY-ON
-   Loading animation --> Result: avatar wearing the garment
+   Loading animation --> Result: selected model wearing the garment
    "AI recommends size L for the best fit (Fit Score: 92%)"
                     |
                     v
